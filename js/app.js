@@ -26,7 +26,9 @@
   const IMG3D = (id) => `assets/img/3d/${id}.jpg`;
   // الصور المتوفرة كنماذج ثلاثية الأبعاد / images available as 3D renders
   const HAS3D = new Set(["h-1895-hand", "h-1896-becquerel", "h-1896-early-lab", "h-1898-curie", "h-1901-roentgen", "h-1913-coolidge", "h-1928-icrp", "h-1957-gamma", "h-1958-ultrasound", "h-1971-ct", "h-1977-mri", "h-1979-nobel", "h-1993-pacs", "h-2003-nobel", "h-2008-children", "h-2012-idor", "h-today-ai", "s-staff", "s-contrast", "s-children"]);
-  const PIC = (id) => HAS3D.has(id) ? IMG3D(id) : IMG(id);
+  // مخططات ثلاثية الأبعاد بتسميات لكل لغة / 3D diagrams with labels per language
+  const LABELED = new Set(["m-xray", "m-ct", "m-mri", "m-ultrasound", "m-mammography", "m-fluoroscopy", "m-nuclear", "m-interventional", "m-dexa", "s-tds", "s-mri-zones", "s-pregnancy"]);
+  const PIC = (id) => LABELED.has(id) ? `assets/img/3d/${id}-${LANG}.jpg` : HAS3D.has(id) ? IMG3D(id) : IMG(id);
 
   /* ---------- الألوان / Colors ---------- */
   const MOD = {
@@ -93,7 +95,7 @@
       ${o.v ? `<span class="v">${o.v}</span>` : ""}${o.href ? I("chev", 'class="chev"') : ""}</${tag}>`;
   };
   const group = (rows, icons) => `<div class="group${icons ? " icons" : ""}">${rows.join("")}</div>`;
-  const hero = (id, cap) => `<figure class="hero-media" style="margin:0"><img src="${PIC(id)}" alt="${tr(U.illusAlt, { t: cap })}" loading="lazy"><figcaption>${HAS3D.has(id) ? U.v3d.cap : U.illus} · ${cap}</figcaption></figure>`;
+  const hero = (id, cap) => `<figure class="hero-media" style="margin:0"><img src="${PIC(id)}" alt="${tr(U.illusAlt, { t: cap })}" loading="lazy">${LABELED.has(id) ? "" : `<figcaption>${HAS3D.has(id) ? U.v3d.cap : U.illus} · ${cap}</figcaption>`}</figure>`;
   const meter = (lvl) => `<span class="meter">${[1, 2, 3, 4].map(i => `<i class="${i <= lvl ? "on" : ""}"></i>`).join("")}</span>`;
   const doseBadge = (lvl) => `<span class="badge lvl-${lvl}">${meter(lvl)}${D.doseLabels[lvl]}</span>`;
   const callout = (icon, c, h, p) => `<div class="callout" ${C(c)}>${ico(icon, c)}<div><b>${h}</b><p>${p}</p></div></div>`;

@@ -1,13 +1,48 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>render 3d</title>
 <script type="importmap">{ "imports": { "three": "../js/vendor/three.module.min.js" } }</script>
-<style>body{margin:0;background:#222}canvas{display:block}</style></head>
+<style>body{margin:0;background:#222}canvas{display:block}
+@font-face{font-family:"Tajawal";font-weight:500;src:url(fonts/tajawal-arabic-500-normal.woff2) format("woff2");unicode-range:U+0600-06FF,U+0750-077F,U+FB50-FDFF,U+FE70-FEFF}
+@font-face{font-family:"Tajawal";font-weight:800;src:url(fonts/tajawal-arabic-800-normal.woff2) format("woff2");unicode-range:U+0600-06FF,U+0750-077F,U+FB50-FDFF,U+FE70-FEFF}
+@font-face{font-family:"Tajawal";font-weight:500;src:url(fonts/tajawal-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Tajawal";font-weight:800;src:url(fonts/tajawal-latin-800-normal.woff2) format("woff2")}</style></head>
 <body>
 <canvas id="c"></canvas>
 <script type="module">
   // صفحة توليد الصور: تُفتح من سكربت tools/render3d.py
-  import { buildScene, makeRenderer, MODEL_IDS } from "../js/scenes3d.js";
-  window.MODEL_IDS = MODEL_IDS;
+  import { buildScene, makeRenderer, MODEL_IDS, LABELED_IDS, THREE } from "../js/scenes3d.js";
+  window.MODEL_IDS = MODEL_IDS; window.LABELED_IDS = LABELED_IDS;
+  await Promise.all(["800 30px Tajawal", "500 30px Tajawal"].flatMap(f => [document.fonts.load(f, "عربي"), document.fonts.load(f, "Latin")]));
+  // صورة بتسميات بلغة محددة / image with labels in one language
+  window.renderLabeled = (id, lang, w = 1600, h = 900, q = 0.9) => {
+    const canvas = document.getElementById("c");
+    const r = makeRenderer(canvas, { preserve: true });
+    r.setPixelRatio(1); r.setSize(w, h, false);
+    const { scene, camera, labels } = buildScene(id, r);
+    camera.aspect = w / h; camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+    r.render(scene, camera); r.render(scene, camera);
+    const out = document.createElement("canvas"); out.width = w; out.height = h;
+    const c = out.getContext("2d"); c.drawImage(canvas, 0, 0);
+    const rtl = lang === "ar";
+    c.font = `800 ${Math.round(w / 52)}px Tajawal, sans-serif`; c.direction = rtl ? "rtl" : "ltr"; c.textBaseline = "middle";
+    const pad = w / 90, ph = w / 30;
+    labels.forEach(lb => {
+      const v = new THREE.Vector3(...lb.p).project(camera);
+      const ax = (v.x + 1) / 2 * w, ay = (1 - v.y) / 2 * h;
+      const text = lb[lang], tw = c.measureText(text).width, bw = tw + pad * 2;
+      let bx = lb.at[0] * w - bw / 2, by = lb.at[1] * h - ph / 2;
+      bx = Math.max(12, Math.min(w - bw - 12, bx)); by = Math.max(12, Math.min(h - ph - 12, by));
+      const cx = bx + bw / 2, cy = by + ph / 2;
+      c.save(); c.strokeStyle = "rgba(10,132,255,.95)"; c.lineWidth = w / 600; c.shadowColor = "rgba(0,0,0,.25)"; c.shadowBlur = 4;
+      c.beginPath(); c.moveTo(ax, ay); c.lineTo(cx, cy); c.stroke(); c.restore();
+      c.fillStyle = "#fff"; c.beginPath(); c.arc(ax, ay, w / 220, 0, 7); c.fill();
+      c.fillStyle = "#0a84ff"; c.beginPath(); c.arc(ax, ay, w / 380, 0, 7); c.fill();
+      c.save(); c.shadowColor = "rgba(20,35,50,.28)"; c.shadowBlur = 14; c.shadowOffsetY = 3;
+      c.fillStyle = "rgba(255,255,255,.95)"; c.beginPath(); c.roundRect(bx, by, bw, ph, ph / 2); c.fill(); c.restore();
+      c.fillStyle = "#14232b"; c.textAlign = "center"; c.fillText(text, cx, cy + 1);
+    });
+    const url = out.toDataURL("image/jpeg", q); r.dispose(); return url;
+  };
   window.renderImage = (id, w = 1600, h = 900, q = 0.88) => {
     const canvas = document.getElementById("c");
     const r = makeRenderer(canvas, { preserve: true });

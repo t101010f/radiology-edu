@@ -261,7 +261,7 @@ const MODELS = {
 
   fluoroscopy() {
     const g = new THREE.Group(), mt = materials();
-    g.add(patientTable({ length: 2.4, height: 0.92, z: 1.3 }));
+    g.add(patientTable({ length: 2.4, height: 0.92, z: 1.0 }));
     const c = cArm(0.8, 0.095); c.position.set(0, 0.98, -0.1); g.add(c);
     g.add(rbox(0.8, 0.14, 0.42, 0.06, mt.shell, -1.2, 0.98, -0.1));
     g.add(rbox(0.36, 0.98, 0.42, 0.08, mt.shell, -1.55, 0.49, -0.1));
@@ -546,7 +546,229 @@ Object.assign(MODELS, {
   }
 });
 
+/* ---------------------------------------------------------------- مخططات «كيف يعمل» المقطوعة
+   labels: { p: نقطة في المشهد, at: موضع النص [0..1 من العرض والارتفاع], ar, en } */
+const skin = () => new THREE.MeshPhysicalMaterial({ color: 0xd8c0a6, roughness: 0.55, sheen: 0.4, sheenColor: 0xffe2c8 });
+const ghostSkin = () => new THREE.MeshPhysicalMaterial({ color: 0xe6cdb4, roughness: 0.5, transparent: true, opacity: 0.32, depthWrite: false });
+const ghost = (col = 0xffffff, op = 0.18) => new THREE.MeshPhysicalMaterial({ color: col, roughness: 0.25, clearcoat: 0.6, transparent: true, opacity: op, depthWrite: false, side: THREE.DoubleSide });
+const glowMat = (col, op = 1) => new THREE.MeshBasicMaterial({ color: col, transparent: op < 1, opacity: op, depthWrite: op >= 1, toneMapped: false, side: THREE.DoubleSide });
+
+/** مجسّم إنسان (قائم، القدمان عند y=0، الوجه نحو +z) */
+function mannequin(mat) {
+  const g = new THREE.Group(), m = mat || skin();
+  const cap = (r, len, x, y, z, rz = 0, sx = 1, sz = 1) => { const c = new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 8, 24), m); c.position.set(x, y, z); c.rotation.z = rz; c.scale.set(sx, 1, sz); g.add(c); return c; };
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.1, 32, 24), m); head.scale.set(0.9, 1.12, 1); head.position.y = 1.6; g.add(head);
+  cap(0.05, 0.06, 0, 1.47, 0);
+  cap(0.17, 0.32, 0, 1.2, 0, 0, 1.05, 0.62);
+  cap(0.15, 0.06, 0, 0.93, 0, Math.PI / 2, 1, 0.7);
+  [-1, 1].forEach(sd => { cap(0.068, 0.68, 0.095 * sd, 0.47, 0, 0.02 * sd); cap(0.045, 0.52, 0.245 * sd, 1.13, 0, 0.09 * sd);
+    const foot = new THREE.Mesh(new THREE.CapsuleGeometry(0.045, 0.1, 6, 12), m); foot.rotation.x = Math.PI / 2; foot.position.set(0.1 * sd, 0.04, 0.05); g.add(foot); });
+  return g;
+}
+/** مريض مستلقٍ على ظهره، الرأس نحو -z */
+function lyingPatient(mat, y = 0.95, z = 0.8) { const m = mannequin(mat); m.rotation.x = -Math.PI / 2; m.position.set(0, y, z); return m; }
+function cone(rTop, rBot, h, mat, seg = 4) { const c = new THREE.Mesh(new THREE.CylinderGeometry(rTop, rBot, h, seg, 1, true), mat); if (seg === 4) c.rotation.y = Math.PI / 4; return c; }
+function fan(r, angle, mat) { return new THREE.Mesh(new THREE.CircleGeometry(r, 48, -Math.PI / 2 - angle / 2, angle), mat); }
+function arrowArc(R, arc, mat) { const g = new THREE.Group(); g.add(torus(R, 0.012, mat, arc)); const h = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.08, 16), mat); h.position.set(R * Math.cos(arc), R * Math.sin(arc), 0); h.rotation.z = arc; g.add(h); return g; }
+function arrowLine(len, mat) { const g = new THREE.Group(); const s = cyl(0.012, 0.012, len, mat, 12); s.position.y = len / 2; g.add(s); const h = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.08, 16), mat); h.position.y = len + 0.04; g.add(h); return g; }
+const L = (p, at, ar, en) => ({ p, at, ar, en });
+
+Object.assign(MODELS, {
+  "m-xray"() {
+    const g = new THREE.Group(), mt = materials();
+    const head = new THREE.Group();
+    const housing = cyl(0.13, 0.13, 0.5, mt.shell, 48); housing.rotation.z = Math.PI / 2; head.add(housing);
+    head.add(rbox(0.3, 0.2, 0.3, 0.03, mt.shell2, 0, -0.2, 0));
+    head.position.set(0, 1.85, 0.05); g.add(head);
+    g.add(rbox(0.14, 0.7, 0.14, 0.02, mt.shell, 0, 2.3, 0.05));
+    const beam = cone(0.04, 0.5, 1.12, glowMat(0xffc861, 0.22)); beam.position.set(0, 1.18, 0.05); g.add(beam);
+    g.add(rbox(0.5, 0.6, 0.7, 0.06, mt.shell, 0, 0.3, 0.6));
+    g.add(rbox(0.76, 0.05, 2.1, 0.02, ghost(0xffffff, 0.35), 0, 0.66, 0.4));
+    const det = rbox(0.62, 0.03, 0.62, 0.01, glowMat(0x34c759, 0.95), 0, 0.6, 0.05); g.add(det);
+    g.add(lyingPatient(skin(), 0.8, 1.25));
+    const mon = monitor(0.7, 0.46, textures().chest); mon.position.set(1.15, 1.25, -0.2); mon.rotation.y = -0.5; g.add(mon);
+    return { group: g, cam: [2.4, 1.9, 3.3], target: [0.25, 1.1, 0.35], fov: 34, labels: [
+      L([0, 1.9, 0.05], [0.2, 0.12], "أنبوب الأشعة", "X-ray tube"), L([0.12, 1.25, 0.05], [0.15, 0.42], "شعاع الأشعة السينية", "X-ray beam"),
+      L([0.28, 0.6, 0.3], [0.2, 0.8], "الكاشف الرقمي", "Digital detector"), L([0.05, 0.9, 0.6], [0.5, 0.9], "المريض", "Patient"),
+      L([1.15, 1.25, -0.2], [0.82, 0.15], "الصورة على الشاشة", "Image on screen")] };
+  },
+  "m-ct"() {
+    const g = new THREE.Group(), mt = materials(), gy = 1.0;
+    const shell = boreSlab(2.0, 2.0, 0.86, 0.38, 0.85, ghost(0xffffff, 0.16)); shell.position.set(0, gy, 0); g.add(shell);
+    const ring = torus(0.7, 0.05, mt.graphite); ring.position.set(0, gy, 0); g.add(ring);
+    const tube = rbox(0.24, 0.14, 0.26, 0.03, new THREE.MeshStandardMaterial({ color: 0xff9f0a, roughness: 0.4 }), 0, gy + 0.7, 0); g.add(tube);
+    const det = torus(0.7, 0.07, glowMat(0x34c759), Math.PI * 0.42); det.rotation.z = -Math.PI / 2 - Math.PI * 0.21; det.position.set(0, gy, 0); g.add(det);
+    const f = fan(1.35, 0.62, glowMat(0xffc861, 0.26)); f.position.set(0, gy + 0.66, 0); g.add(f);
+    const rot = arrowArc(0.9, Math.PI * 0.5, glowMat(0x0a84ff)); rot.position.set(0, gy, 0.05); rot.rotation.z = Math.PI * 0.15; g.add(rot);
+    g.add(patientTable({ length: 2.4, height: 0.86, z: 1.25 }));
+    g.add(lyingPatient(skin(), 1.02, 0.7));
+    const mv = arrowLine(0.5, glowMat(0x0a84ff)); mv.rotation.x = -Math.PI / 2; mv.position.set(0.38, 0.95, 1.6); g.add(mv);
+    const mon = monitor(0.6, 0.6, textures().ct); mon.position.set(-1.35, 1.35, 0.6); mon.rotation.y = 0.55; g.add(mon);
+    return { group: g, cam: [2.2, 1.7, 3.9], target: [-0.15, 1.0, 0.45], fov: 36, labels: [
+      L([0, gy + 0.7, 0], [0.5, 0.06], "أنبوب الأشعة يدور حول الجسم", "X-ray tube rotates around the body"),
+      L([0.3, gy + 0.2, 0], [0.86, 0.3], "حزمة مروحية من الأشعة", "Fan-shaped X-ray beam"),
+      L([0.35, gy - 0.6, 0], [0.78, 0.86], "الكواشف", "Detectors"),
+      L([0.38, 0.95, 1.85], [0.6, 0.94], "السرير يتحرك داخل الجهاز", "Table moves through the scanner"),
+      L([-1.35, 1.35, 0.6], [0.12, 0.2], "مقطع عرضي", "Cross-sectional slice")] };
+  },
+  "m-mri"() {
+    const g = new THREE.Group(), mt = materials(), gy = 1.08;
+    const shell = boreSlab(2.2, 2.3, 0.95, 0.36, 1.7, ghost(0xffffff, 0.14)); shell.position.set(0, gy, 0); g.add(shell);
+    const copper = new THREE.MeshStandardMaterial({ color: 0xc8793d, metalness: 1, roughness: 0.32 });
+    [-0.65, -0.35, -0.08, 0.08, 0.35, 0.65].forEach(z => { const c = torus(0.82, 0.07, copper); c.position.set(0, gy, z); c.scale.z = 1.6; g.add(c); });
+    const grad = cyl(0.5, 0.5, 1.5, ghost(0x5e5ce6, 0.35), 64); grad.rotation.x = Math.PI / 2; grad.position.set(0, gy, 0); g.add(grad);
+    const bird = new THREE.Group(); for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; const r = cyl(0.008, 0.008, 0.36, glowMat(0x64d2ff), 8); r.rotation.x = Math.PI / 2; r.position.set(Math.cos(a) * 0.2, Math.sin(a) * 0.2, 0); bird.add(r); } [-0.18, 0.18].forEach(z => { const t = torus(0.2, 0.01, glowMat(0x64d2ff)); t.position.z = z; bird.add(t); });
+    bird.position.set(0, 1.1, -0.15); g.add(bird);
+    for (let i = 0; i < 4; i++) { const k = 1.2 + i * 0.28; const e = new THREE.Mesh(new THREE.TorusGeometry(1, 0.006, 8, 128), glowMat(0x0a84ff, 0.5 - i * 0.09)); e.scale.set(1.1 * k, 0.6 * k, 1); e.rotation.y = Math.PI / 2; e.position.set(0, gy, 0); g.add(e); }
+    g.add(patientTable({ length: 2.6, height: 0.9, z: 1.75 }));
+    g.add(lyingPatient(skin(), 1.05, 1.5));
+    return { group: g, cam: [3.4, 2.0, 3.8], target: [0, 1.0, 0.35], fov: 36, labels: [
+      L([0.5, gy + 0.65, 0.35], [0.82, 0.1], "المغناطيس الرئيسي (ملفات فائقة التوصيل)", "Main magnet (superconducting coils)"),
+      L([0.3, gy + 0.4, 0.75], [0.12, 0.1], "ملفات التدرج", "Gradient coils"),
+      L([0.2, 1.1, -0.15], [0.1, 0.42], "ملف الترددات الراديوية", "Radiofrequency coil"),
+      L([0, gy + 1.0, -1.2], [0.42, 0.04], "المجال المغناطيسي", "Magnetic field"),
+      L([0.12, 1.12, 1.9], [0.62, 0.9], "المريض داخل الفتحة", "Patient inside the bore")] };
+  },
+  "m-ultrasound"() {
+    const g = new THREE.Group(), mt = materials();
+    g.add(rbox(0.7, 0.06, 2.0, 0.025, mt.shell, 0, 0.66, 0)); g.add(rbox(0.6, 0.05, 1.8, 0.02, mt.cushion, 0, 0.71, 0)); g.add(rbox(0.5, 0.6, 0.8, 0.06, mt.shell2, 0, 0.3, 0));
+    g.add(lyingPatient(ghostSkin(), 0.87, 0.85));
+    const liver = new THREE.Mesh(new THREE.SphereGeometry(0.12, 32, 16), new THREE.MeshStandardMaterial({ color: 0x9c3b32, roughness: 0.5 })); liver.scale.set(1.4, 0.6, 0.9); liver.position.set(-0.04, 0.84, -0.12); g.add(liver);
+    const gb = new THREE.Mesh(new THREE.SphereGeometry(0.035, 24, 12), new THREE.MeshStandardMaterial({ color: 0x4f8a3c, roughness: 0.4 })); gb.position.set(0.04, 0.86, -0.05); g.add(gb);
+    const probe = new THREE.Mesh(new THREE.CapsuleGeometry(0.03, 0.12, 6, 16), mt.shell); probe.position.set(0.03, 1.08, -0.08); probe.rotation.z = 0.15; g.add(probe);
+    const f = fan(0.25, 0.9, glowMat(0x5ac8fa, 0.32)); f.rotation.y = Math.PI / 2; f.position.set(0.02, 1.0, -0.08); g.add(f);
+    for (let i = 1; i <= 4; i++) { const a = torus(0.05 * i, 0.003, glowMat(0x5ac8fa, 0.8), 0.9); a.rotation.set(0, Math.PI / 2, -Math.PI / 2 - 0.45); a.position.set(0.02, 1.0, -0.08); g.add(a); }
+    const cart = MODELS.ultrasound().group; cart.position.set(0.95, 0, -0.55); cart.rotation.y = -0.6; g.add(cart);
+    return { group: g, cam: [1.6, 1.75, 1.6], target: [0.3, 0.95, -0.15], fov: 36, labels: [
+      L([0.03, 1.12, -0.08], [0.18, 0.12], "المجس مع الجل", "Probe with gel"), L([0.02, 0.98, -0.08], [0.12, 0.5], "موجات صوتية وصداها", "Sound waves and echoes"),
+      L([-0.06, 0.84, -0.15], [0.2, 0.85], "العضو (الكبد والمرارة)", "Organ (liver and gallbladder)"), L([0.95, 1.62, -0.7], [0.85, 0.12], "صورة لحظية", "Real-time image")] };
+  },
+  "m-mammography"() {
+    const d = MODELS.mammography(), g = d.group, mt = materials();
+    const breast = new THREE.Mesh(new THREE.SphereGeometry(0.11, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), skin()); breast.scale.set(1.2, 0.55, 1.1); breast.rotation.x = Math.PI; breast.position.set(0, 1.16, 0.36); breast.scale.y = 0.55; g.add(breast);
+    const b2 = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.12, 32), skin()); b2.scale.z = 0.9; b2.position.set(0, 1.1, 0.33); g.add(b2);
+    const beam = cone(0.03, 0.2, 0.62, glowMat(0xffc861, 0.25)); beam.position.set(0, 1.45, 0.33); g.add(beam);
+    const p = arrowLine(0.12, glowMat(0x0a84ff)); p.rotation.x = Math.PI; p.position.set(0.24, 1.36, 0.36); g.add(p);
+    return { group: g, cam: [1.4, 1.55, 1.75], target: [0, 1.3, 0.25], fov: 34, labels: [
+      L([0, 1.86, 0.35], [0.2, 0.1], "أنبوب الأشعة", "X-ray tube"), L([0.1, 1.17, 0.4], [0.82, 0.38], "لوح الضغط", "Compression paddle"),
+      L([0, 1.1, 0.42], [0.18, 0.6], "الثدي بين اللوحين", "Breast between the plates"), L([0.1, 1.03, 0.4], [0.75, 0.82], "الكاشف", "Detector"),
+      L([0.05, 1.45, 0.33], [0.8, 0.12], "أشعة بطاقة منخفضة", "Low-energy X-rays")] };
+  },
+  "m-fluoroscopy"() {
+    const d = MODELS.fluoroscopy(), g = d.group;
+    g.add(lyingPatient(skin(), 1.07, 1.15));
+    const beam = cone(0.05, 0.22, 1.35, glowMat(0xffc861, 0.25)); beam.position.set(0, 0.98, -0.1); beam.rotation.x = Math.PI; g.add(beam);
+    return { group: g, cam: [3.0, 2.0, 3.2], target: [-0.1, 1.15, -0.1], fov: 36, labels: [
+      L([0, 0.22, -0.1], [0.25, 0.9], "أنبوب الأشعة أسفل السرير", "X-ray tube under the table"), L([0, 1.8, -0.1], [0.2, 0.1], "الكاشف فوق المريض", "Detector above the patient"),
+      L([0.05, 1.3, -0.1], [0.08, 0.45], "شعاع مستمر أو نبضي", "Continuous or pulsed beam"), L([0.55, 1.8, -0.45], [0.82, 0.12], "صورة حية متحركة", "Live moving image")] };
+  },
+  "m-nuclear"() {
+    const g = new THREE.Group(), mt = materials(), gy = 1.05;
+    [1, -1].forEach(sd => { const h = new THREE.Group(); h.add(rbox(0.62, 0.24, 0.9, 0.05, mt.shell)); h.add(rbox(0.56, 0.02, 0.84, 0.01, mt.graphite, 0, -0.12 * sd, 0)); h.position.set(0, gy + 0.43 * sd, 0.55); g.add(h); });
+    const ring = boreSlab(2.3, 2.2, 0.7, 0.72, 0.5, ghost(0xffffff, 0.18)); ring.position.set(0, gy, -0.35); g.add(ring);
+    g.add(patientTable({ length: 2.5, height: 0.86, z: 1.45, width: 0.42 }));
+    g.add(lyingPatient(ghostSkin(), 1.02, 1.0));
+    const hot = (x, y, z, r, c) => { const s = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 12), glowMat(c)); s.position.set(x, y, z); g.add(s); const h = new THREE.Mesh(new THREE.SphereGeometry(r * 2.2, 24, 12), glowMat(c, 0.25)); h.position.copy(s.position); g.add(h); };
+    for (let i = 0; i < 8; i++) hot(0, 1.0, -0.05 + i * 0.06, 0.018, 0xffb340);
+    hot(-0.07, 1.0, 0.3, 0.035, 0xff7a3a); hot(0.07, 1.0, 0.3, 0.035, 0xff7a3a); hot(0, 1.0, 0.55, 0.04, 0xffd060); hot(0, 1.02, -0.6, 0.06, 0xffd060);
+    [[0, 0.2], [-0.07, 0.3], [0.07, 0.4]].forEach(([x, z]) => { const r = cyl(0.004, 0.004, 0.3, glowMat(0xffc861, 0.8), 6); r.position.set(x, 1.18, z); g.add(r); });
+    return { group: g, cam: [2.6, 1.9, 3.4], target: [0, 1.0, 0.45], fov: 34, labels: [
+      L([0, 1.02, 0.3], [0.85, 0.55], "مادة مشعة متتبّعة داخل الجسم", "Radioactive tracer inside the body"),
+      L([0.07, 1.25, 0.4], [0.82, 0.25], "أشعة جاما تخرج من الجسم", "Gamma rays leave the body"),
+      L([0.3, gy + 0.55, 0.55], [0.3, 0.06], "كاشف جاما", "Gamma detector"), L([0.3, gy - 0.5, 0.55], [0.2, 0.9], "كاشف ثانٍ", "Second detector")] };
+  },
+  "m-interventional"() {
+    const g = new THREE.Group(), mt = materials();
+    g.add(patientTable({ length: 2.7, height: 0.94, z: 1.35 }));
+    const c = cArm(0.86, 0.1); c.position.set(0, 1.02, -0.3); g.add(c);
+    g.add(lyingPatient(ghostSkin(), 1.08, 1.1));
+    const red = new THREE.MeshStandardMaterial({ color: 0xd2382d, roughness: 0.35, emissive: 0x6a0f0a, emissiveIntensity: 0.4 });
+    const path = (pts, r) => g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(p => new THREE.Vector3(...p))), 64, r, 10), red));
+    path([[0, 1.08, -0.45], [0, 1.08, 0.0], [0, 1.08, 0.25], [0.08, 1.08, 0.45], [0.1, 1.08, 0.95]], 0.022);
+    path([[0, 1.08, 0.25], [-0.08, 1.08, 0.45], [-0.1, 1.08, 0.95]], 0.02);
+    path([[0, 1.08, -0.05], [0.09, 1.07, -0.08], [0.12, 1.06, -0.02]], 0.012); path([[0, 1.08, -0.3], [-0.12, 1.08, -0.35], [-0.2, 1.08, -0.3]], 0.012);
+    const cath = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([[0.35, 1.2, 0.75], [0.15, 1.12, 0.62], [0.08, 1.08, 0.45], [0, 1.08, 0.2], [0, 1.08, -0.05], [0.09, 1.07, -0.08]].map(p => new THREE.Vector3(...p))), 80, 0.007, 8), glowMat(0x64d2ff));
+    g.add(cath);
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.018, 16, 8), glowMat(0xffffff)); tip.position.set(0.09, 1.07, -0.08); g.add(tip);
+    const beam = cone(0.05, 0.24, 1.5, glowMat(0xffc861, 0.18)); beam.position.set(0, 1.02, -0.3); g.add(beam);
+    return { group: g, cam: [1.9, 2.3, 2.6], target: [0.05, 1.05, 0.15], fov: 34, labels: [
+      L([0.35, 1.2, 0.75], [0.82, 0.78], "فتحة دخول صغيرة", "Small entry point"), L([0.02, 1.08, 0.2], [0.85, 0.42], "القسطرة داخل الشريان", "Catheter inside the artery"),
+      L([0.09, 1.07, -0.08], [0.55, 0.06], "طرف القسطرة عند الهدف", "Catheter tip at the target"), L([-0.1, 1.08, 0.7], [0.15, 0.85], "الأوعية الدموية", "Blood vessels"),
+      L([0, 1.9, -0.3], [0.15, 0.12], "توجيه بالأشعة", "Imaging guidance")] };
+  },
+  "m-dexa"() {
+    const d = MODELS.dexa(), g = d.group;
+    g.add(lyingPatient(ghostSkin(), 0.82, 0.8));
+    const bone = new THREE.MeshStandardMaterial({ color: 0xf4f1e8, roughness: 0.5, emissive: 0x333028, emissiveIntensity: 0.3 });
+    for (let i = 0; i < 6; i++) g.add(rbox(0.07, 0.05, 0.05, 0.015, bone, 0, 0.8, -0.05 + i * 0.065));
+    [-1, 1].forEach(sd => { const h = new THREE.Mesh(new THREE.SphereGeometry(0.06, 24, 12), bone); h.scale.set(1.4, 0.7, 1); h.position.set(0.09 * sd, 0.8, 0.42); g.add(h); const f = cyl(0.025, 0.025, 0.3, bone); f.rotation.x = Math.PI / 2; f.position.set(0.1 * sd, 0.8, 0.62); g.add(f); });
+    const zone = rbox(0.4, 0.005, 0.5, 0.01, glowMat(0x34c759, 0.3), 0, 0.88, 0.25); g.add(zone);
+    const b1 = cone(0.08, 0.02, 0.5, glowMat(0x0a84ff, 0.35)); b1.position.set(-0.05, 0.9, 0.15); g.add(b1);
+    const b2 = cone(0.08, 0.02, 0.5, glowMat(0xffc861, 0.35)); b2.position.set(-0.07, 0.9, 0.19); g.add(b2);
+    d.labels = [L([-0.06, 1.13, 0.15], [0.2, 0.08], "الكاشف يمر فوق المريض", "Detector moves over the patient"), L([-0.06, 0.95, 0.17], [0.1, 0.42], "شعاعان بطاقتين مختلفتين", "Two beams at different energies"),
+      L([0.09, 0.8, 0.42], [0.55, 0.92], "قياس كثافة الورك والعمود الفقري", "Hip and spine density measured"), L([0.3, 0.42, 1.18], [0.85, 0.6], "نتيجة T-score", "T-score result")];
+    d.cam = [2.0, 1.7, 2.4]; d.target = [0, 0.8, 0.3]; d.fov = 34; return d;
+  },
+
+  /* ---- الوقاية ---- */
+  "s-tds"() {
+    const g = new THREE.Group(), mt = materials();
+    g.add(rbox(0.3, 1.3, 0.3, 0.05, mt.shell, -1.6, 0.65, 0));
+    const src = cyl(0.13, 0.13, 0.42, mt.shell, 48); src.rotation.x = Math.PI / 2; src.position.set(-1.6, 1.35, 0); g.add(src);
+    const core = new THREE.Mesh(new THREE.SphereGeometry(0.07, 24, 12), glowMat(0xffb340)); core.position.set(-1.38, 1.35, 0); g.add(core);
+    for (let i = 1; i <= 5; i++) { const r = new THREE.Mesh(new THREE.RingGeometry(i * 0.5 - 0.01, i * 0.5 + 0.01, 96), glowMat(0xff9f0a, 0.5 - i * 0.07)); r.rotation.x = -Math.PI / 2; r.position.set(-1.6, 0.005, 0); g.add(r); }
+    const figure = (x, col) => { const m = mannequin(new THREE.MeshPhysicalMaterial({ color: col, roughness: 0.45, clearcoat: 0.4 })); m.position.set(x, 0, 0); m.rotation.y = -Math.PI / 2; g.add(m); };
+    figure(-0.6, 0xff453a); figure(0.4, 0xff9f0a);
+    const wall = rbox(0.12, 2.0, 1.4, 0.02, new THREE.MeshStandardMaterial({ color: 0x8e9aa5, roughness: 0.4, metalness: 0.5 }), 1.05, 1.0, 0); g.add(wall);
+    const win = rbox(0.13, 0.4, 0.6, 0.02, mt.leadGlass, 1.05, 1.5, 0); g.add(win);
+    figure(1.55, 0x30d158);
+    return { group: g, cam: [0.3, 2.3, 4.8], target: [0.0, 0.95, 0], fov: 38, labels: [
+      L([-1.38, 1.35, 0], [0.12, 0.12], "مصدر الأشعة", "Radiation source"),
+      L([-0.6, 1.75, 0], [0.32, 0.1], "على بعد 1 م · جرعة 100%", "At 1 m · 100% dose"),
+      L([0.4, 1.75, 0], [0.56, 0.1], "على بعد 2 م · جرعة 25%", "At 2 m · 25% dose"),
+      L([1.05, 2.0, 0.3], [0.78, 0.06], "حاجز رصاصي", "Lead barrier"),
+      L([1.55, 1.0, 0], [0.88, 0.62], "خلف الحاجز · أقل جرعة", "Behind the barrier · lowest dose")] };
+  },
+  "s-mri-zones"() {
+    const g = new THREE.Group(), mt = materials();
+    const zone = (w, d, x, z, col) => { const f = rbox(w, 0.04, d, 0.01, new THREE.MeshStandardMaterial({ color: col, roughness: 0.7 }), x, 0.02, z); g.add(f); };
+    const wallM = new THREE.MeshStandardMaterial({ color: 0xf2f4f6, roughness: 0.8 });
+    const wall = (w, d, x, z) => g.add(rbox(w, 0.45, d, 0.01, wallM, x, 0.26, z));
+    zone(5.2, 3.0, 0, 0, 0x7fd6a0); zone(3.6, 3.0, 0.8, 0, 0x8fc7f2); zone(2.4, 3.0, 1.4, 0, 0xf6c27a); zone(1.4, 3.0, 1.9, 0, 0xf29a92);
+    wall(0.06, 3.0, -1.0, 0); wall(0.06, 3.0, 0.2, 0); wall(0.08, 3.0, 1.2, 0); wall(5.2, 0.06, 0, -1.5);
+    g.add(rbox(0.08, 0.45, 0.6, 0.01, mt.leadGlass, 1.2, 0.26, 0.7));
+    const mri = MODELS.mri().group; mri.scale.setScalar(0.32); mri.position.set(1.95, 0.04, -0.35); mri.rotation.y = -Math.PI / 2; g.add(mri);
+    const desk = rbox(0.5, 0.3, 0.3, 0.03, mt.shell, -0.45, 0.19, -0.9); g.add(desk);
+    const chair = (x, z) => g.add(rbox(0.18, 0.2, 0.18, 0.03, mt.cushion, x, 0.14, z)); chair(-2.2, -0.3); chair(-2.2, 0.1); chair(-2.2, 0.5);
+    const lab = (n, x, z) => { const t = new THREE.Mesh(new THREE.CircleGeometry(0.17, 48), new THREE.MeshBasicMaterial({ map: canvasTex(128, 128, (c, w, h) => { c.fillStyle = "#fff"; c.beginPath(); c.arc(64, 64, 62, 0, 7); c.fill(); c.fillStyle = "#1c1c1e"; c.font = "bold 84px sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(n, 64, 70); }), transparent: true })); t.rotation.x = -Math.PI / 2; t.position.set(x, 0.045, z); g.add(t); };
+    lab("1", -1.8, 1.1); lab("2", -0.4, 1.1); lab("3", 0.7, 1.1); lab("4", 1.65, 1.1);
+    return { group: g, cam: [0.2, 4.6, 4.2], target: [0.1, 0, 0.1], fov: 36, labels: [
+      L([-1.8, 0.05, 0.6], [0.1, 0.9], "المنطقة 1 · عامة", "Zone 1 · Public"), L([-0.4, 0.05, 0.6], [0.36, 0.92], "المنطقة 2 · الاستقبال والفحص", "Zone 2 · Reception & screening"),
+      L([0.7, 0.05, 0.6], [0.64, 0.92], "المنطقة 3 · مقيّدة", "Zone 3 · Restricted"), L([1.7, 0.4, -0.3], [0.88, 0.1], "المنطقة 4 · غرفة الجهاز", "Zone 4 · Scanner room")] };
+  },
+  "s-pregnancy"() {
+    const g = new THREE.Group(), mt = materials();
+    const us = MODELS.ultrasound().group; us.position.set(0.9, 0, -0.1); us.rotation.y = -0.4; g.add(us);
+    const bed = new THREE.Group(); bed.add(rbox(0.7, 0.06, 1.9, 0.025, mt.shell, 0, 0.66, 0)); bed.add(rbox(0.6, 0.06, 1.75, 0.02, mt.cushion, 0, 0.72, 0)); bed.add(rbox(0.5, 0.6, 0.8, 0.06, mt.shell2, 0, 0.3, 0));
+    bed.position.set(0, 0, 0.3); g.add(bed);
+    const sign = new THREE.Group();
+    sign.add(rbox(0.04, 1.3, 0.04, 0.015, mt.metal, 0, 0.65, 0)); sign.add(rbox(0.4, 0.04, 0.3, 0.015, mt.shell2, 0, 0.02, 0));
+    const board = new THREE.Mesh(new RoundedBoxGeometry(0.6, 0.8, 0.03, 4, 0.03), [mt.shell, mt.shell, mt.shell, mt.shell, new THREE.MeshStandardMaterial({ roughness: 0.5, map: canvasTex(384, 512, (c, w, h) => {
+      c.fillStyle = "#fff"; c.fillRect(0, 0, w, h); c.fillStyle = "#ff9f0a"; c.fillRect(0, 0, w, 120);
+      c.fillStyle = "#fff"; c.beginPath(); c.arc(192, 60, 38, 0, 7); c.fill(); c.fillStyle = "#ff9f0a"; c.font = "bold 56px sans-serif"; c.textAlign = "center"; c.fillText("!", 192, 80);
+      c.strokeStyle = "#ff9f0a"; c.lineWidth = 10; c.beginPath(); c.arc(192, 280, 80, 0, 7); c.stroke(); c.fillStyle = "#ff9f0a"; c.beginPath(); c.arc(192, 230, 22, 0, 7); c.fill(); c.beginPath(); c.ellipse(205, 300, 38, 48, 0, 0, 7); c.fill();
+      c.fillStyle = "#1c1c1e"; c.font = "bold 30px sans-serif"; c.fillText("?", 300, 210);
+    }) }), mt.shell]);
+    board.position.y = 1.35; sign.add(board); sign.position.set(-0.85, 0, -0.5); sign.rotation.y = 0.45; g.add(sign);
+    return { group: g, cam: [0.5, 1.8, 3.6], target: [0, 0.95, 0], fov: 36, labels: [
+      L([-0.85, 1.6, -0.5], [0.13, 0.08], "احتمال حمل؟ أبلغي الفني أولًا", "Could you be pregnant? Tell the staff first"),
+      L([0.9, 1.6, -0.2], [0.85, 0.08], "بديل بلا إشعاع: السونار", "Radiation-free option: ultrasound"),
+      L([0, 0.78, 0.6], [0.5, 0.92], "تعديل الإعدادات أو تأجيل غير العاجل", "Adjust settings or postpone if not urgent")] };
+  }
+});
+
 export const MODEL_IDS = Object.keys(MODELS);
+export const LABELED_IDS = MODEL_IDS.filter(id => /^m-|^s-(tds|mri-zones|pregnancy)$/.test(id));
 
 /* ---------------------------------------------------------------- المشهد الكامل */
 export function buildScene(id, renderer, { background = 0xe4e9ee } = {}) {
@@ -570,7 +792,7 @@ export function buildScene(id, renderer, { background = 0xe4e9ee } = {}) {
   floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
 
   const def = MODELS[id]();
-  def.group.traverse(o => { if (o.isMesh && !(o.material && o.material.isMeshBasicMaterial)) { o.castShadow = true; o.receiveShadow = true; } });
+  def.group.traverse(o => { if (o.isMesh && !(o.material && (o.material.isMeshBasicMaterial || o.material.transparent))) { o.castShadow = true; o.receiveShadow = true; } });
   scene.add(def.group);
   // ظل تلامس ناعم تحت الجهاز / soft contact shadow
   const box = new THREE.Box3().setFromObject(def.group), size = box.getSize(new THREE.Vector3()), ctr = box.getCenter(new THREE.Vector3());
@@ -587,7 +809,7 @@ export function buildScene(id, renderer, { background = 0xe4e9ee } = {}) {
     camera.position.copy(target).addScaledVector(dir, sph.radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * def.fit);
   }
   camera.lookAt(target);
-  return { scene, camera, target };
+  return { scene, camera, target, labels: def.labels || [] };
 }
 
 export function makeRenderer(canvas, { preserve = false } = {}) {
