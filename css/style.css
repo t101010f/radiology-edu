@@ -17,8 +17,8 @@
   --danger: #b3261e;
   --danger-soft: #f8dedb;
 
-  --f-display: "Reem Kufi", "IBM Plex Sans Arabic", Tahoma, sans-serif;
-  --f-body: "IBM Plex Sans Arabic", Tahoma, "Segoe UI", sans-serif;
+  --f-display: "Tajawal", Tahoma, "Segoe UI", sans-serif;
+  --f-body: "Tajawal", Tahoma, "Segoe UI", sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
 
   --r: 10px;
@@ -48,7 +48,7 @@ body {
 img { max-width: 100%; display: block; }
 a { color: var(--accent); }
 h1, h2, h3 { text-wrap: balance; line-height: 1.3; }
-h1, h2 { font-family: var(--f-display); font-weight: 700; }
+h1, h2 { font-family: var(--f-display); font-weight: 800; }
 button { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
 [hidden] { display: none !important; }
