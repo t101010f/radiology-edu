@@ -7,7 +7,7 @@
   const main = $("#main");
   const IMG = (id) => `assets/img/${id}.svg`;
   const TAGS = { discovery: "اكتشاف", device: "جهاز وتقنية", safety: "سلامة إشعاعية", nobel: "جائزة نوبل" };
-  const SRC = { hist: "صورة تاريخية · ملكية عامة", ai: "صورة توضيحية · ذكاء اصطناعي" };
+  const SRC = { hist: "رسم توضيحي", ai: "رسم توضيحي" };
   const fmt = (n, d = 2) => Number(n).toLocaleString("en-US", { maximumFractionDigits: d });
 
   /* ---------- التنقل ---------- */
@@ -40,7 +40,7 @@
 
   /* ---------- أدوات مشتركة ---------- */
   const figure = (id, caption, src) =>
-    `<figure class="figure"><img src="${IMG(id)}" alt="${caption}" loading="lazy"><figcaption>${caption}${src ? " · " + SRC[src] : ""}<span class="badge-temp">صورة مؤقتة</span></figcaption></figure>`;
+    `<figure class="figure"><img src="${IMG(id)}" alt="${caption}" loading="lazy"><figcaption>${caption}${src ? " · " + SRC[src] : ""}</figcaption></figure>`;
   const meter = (lvl) => `<span class="dose-meter" aria-hidden="true">${[1, 2, 3, 4].map(i => `<i class="${i <= lvl ? "on" : ""}"></i>`).join("")}</span>`;
   const dosePill = (lvl) => `<span class="pill ${RAD.doseClass[lvl]}">${meter(lvl)}${RAD.doseLabels[lvl]}</span>`;
   const head = (eyebrow, title, lede, crumbs) =>
@@ -201,6 +201,7 @@
         <div><h3>المسافة</h3><p>أقوى وسيلة حماية. الجرعة تقل بمربع المسافة عن المصدر.</p></div>
         <div><h3>الحاجز</h3><p>الجدران المبطنة بالرصاص، والنوافذ الرصاصية، والمرايل والواقيات.</p></div>
       </div>
+      <div style="margin-top:14px">${figure("s-tds", "الزمن والمسافة والحاجز", "ai")}</div>
       <div class="distance" style="margin-top:14px">
         <label for="dist"><b>جرّب بنفسك:</b> حرّك المؤشر لترى أثر المسافة على الجرعة</label>
         <input type="range" id="dist" min="0.5" max="4" step="0.5" value="1">
@@ -449,7 +450,7 @@
         <li><a href="https://www.unscear.org" target="_blank" rel="noopener">UNSCEAR</a></li>
       </ul>
     </section>
-    <div class="callout warn"><strong>تنبيه</strong><p>المحتوى للتثقيف فقط ولا يغني عن استشارة الطبيب أو أخصائي الأشعة. الصور الحالية مؤقتة وستُستبدل بصور توضيحية نهائية.</p></div>`;
+    <div class="callout warn"><strong>تنبيه</strong><p>المحتوى للتثقيف فقط ولا يغني عن استشارة الطبيب أو أخصائي الأشعة. الرسوم التوضيحية أصلية ومرسومة خصيصًا للمنصة.</p></div>`;
 
   function notFound() {
     return `${head("خطأ", "الصفحة غير موجودة", "الرابط غير صحيح أو أن الصفحة نُقلت.")}<a class="btn primary" href="#/">العودة للرئيسية</a>`;
