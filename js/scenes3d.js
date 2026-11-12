@@ -734,7 +734,7 @@ Object.assign(MODELS, {
     const zone = (w, d, x, z, col) => { const f = rbox(w, 0.04, d, 0.01, new THREE.MeshStandardMaterial({ color: col, roughness: 0.7 }), x, 0.02, z); g.add(f); };
     const wallM = new THREE.MeshStandardMaterial({ color: 0xf2f4f6, roughness: 0.8 });
     const wall = (w, d, x, z) => g.add(rbox(w, 0.45, d, 0.01, wallM, x, 0.26, z));
-    zone(5.2, 3.0, 0, 0, 0x7fd6a0); zone(3.6, 3.0, 0.8, 0, 0x8fc7f2); zone(2.4, 3.0, 1.4, 0, 0xf6c27a); zone(1.4, 3.0, 1.9, 0, 0xf29a92);
+    zone(1.6, 3.0, -1.8, 0, 0x7fd6a0); zone(1.2, 3.0, -0.4, 0, 0x8fc7f2); zone(1.0, 3.0, 0.7, 0, 0xf6c27a); zone(1.4, 3.0, 1.9, 0, 0xf29a92);
     wall(0.06, 3.0, -1.0, 0); wall(0.06, 3.0, 0.2, 0); wall(0.08, 3.0, 1.2, 0); wall(5.2, 0.06, 0, -1.5);
     g.add(rbox(0.08, 0.45, 0.6, 0.01, mt.leadGlass, 1.2, 0.26, 0.7));
     const mri = MODELS.mri().group; mri.scale.setScalar(0.32); mri.position.set(1.95, 0.04, -0.35); mri.rotation.y = -Math.PI / 2; g.add(mri);
