@@ -37,6 +37,8 @@ window.ICON = (function () {
     radiation: '<circle cx="12" cy="12" r="1.8" fill="currentColor"/><path d="M12 3.5a8.5 8.5 0 0 1 7.4 4.3L14.6 10.5A3 3 0 0 0 12 9zM4.6 7.8A8.5 8.5 0 0 1 12 3.5V9a3 3 0 0 0-2.6 1.5zM12 20.5a8.5 8.5 0 0 1-7.4-4.3l4.8-2.7A3 3 0 0 0 12 15z" fill="currentColor" stroke="none"/>',
     link: '<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/>',
     play: '<path d="M7 4.5v15l12-7.5z"/>',
+    cube: '<path d="M12 2.8 20 7.2v9.6L12 21.2 4 16.8V7.2z"/><path d="M4 7.2 12 11.6l8-4.4M12 11.6v9.6"/>',
+    close: '<path d="M6 6l12 12M18 6 6 18"/>',
     refresh: '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>'
   };
   return function (name, extra) {

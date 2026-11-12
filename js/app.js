@@ -23,6 +23,10 @@
   try { const l = localStorage.getItem("lang"); if (l === "en" || l === "ar") LANG = l; } catch (e) {}
   const tr = (s, v = {}) => s.replace(/\{(\w+)\}/g, (_, k) => (k in v ? v[k] : ""));
   const IMG = (id) => `assets/img/${id}${LANG === "en" ? "-en" : ""}.svg`;
+  const IMG3D = (id) => `assets/img/3d/${id}.jpg`;
+  // الصور المتوفرة كنماذج ثلاثية الأبعاد / images available as 3D renders
+  const HAS3D = new Set(["h-1895-hand", "h-1896-becquerel", "h-1896-early-lab", "h-1898-curie", "h-1901-roentgen", "h-1913-coolidge", "h-1928-icrp", "h-1957-gamma", "h-1958-ultrasound", "h-1971-ct", "h-1977-mri", "h-1979-nobel", "h-1993-pacs", "h-2003-nobel", "h-2008-children", "h-2012-idor", "h-today-ai", "s-staff", "s-contrast", "s-children"]);
+  const PIC = (id) => HAS3D.has(id) ? IMG3D(id) : IMG(id);
 
   /* ---------- الألوان / Colors ---------- */
   const MOD = {
@@ -89,7 +93,7 @@
       ${o.v ? `<span class="v">${o.v}</span>` : ""}${o.href ? I("chev", 'class="chev"') : ""}</${tag}>`;
   };
   const group = (rows, icons) => `<div class="group${icons ? " icons" : ""}">${rows.join("")}</div>`;
-  const hero = (id, cap) => `<figure class="hero-media" style="margin:0"><img src="${IMG(id)}" alt="${tr(U.illusAlt, { t: cap })}" loading="lazy"><figcaption>${U.illus} · ${cap}</figcaption></figure>`;
+  const hero = (id, cap) => `<figure class="hero-media" style="margin:0"><img src="${PIC(id)}" alt="${tr(U.illusAlt, { t: cap })}" loading="lazy"><figcaption>${HAS3D.has(id) ? U.v3d.cap : U.illus} · ${cap}</figcaption></figure>`;
   const meter = (lvl) => `<span class="meter">${[1, 2, 3, 4].map(i => `<i class="${i <= lvl ? "on" : ""}"></i>`).join("")}</span>`;
   const doseBadge = (lvl) => `<span class="badge lvl-${lvl}">${meter(lvl)}${D.doseLabels[lvl]}</span>`;
   const callout = (icon, c, h, p) => `<div class="callout" ${C(c)}>${ico(icon, c)}<div><b>${h}</b><p>${p}</p></div></div>`;
@@ -122,7 +126,7 @@
     return `
     ${title(H.k, H.h, H.p, "blue")}
     <a class="feature" href="#/history" ${C("blue")}>
-      <img src="${IMG("hero")}" alt="">
+      <img src="${IMG3D("hero")}" alt="">
       <div class="cap"><small>${H.start}</small><h2>${tr(H.years, { n: `<span class="num">${yearsSince()}</span>` })}</h2><p>${tr(H.feat, { n: nEvents() })}</p></div>
     </a>
     <section class="section">
@@ -173,7 +177,7 @@
             <div class="more" id="${id}" hidden>
               <span class="badge">${U.cat1[it.c]}</span>
               <p>${it.d}</p>
-              <img src="${IMG(it.img)}" alt="${tr(U.illusAlt, { t: it.t })}" loading="lazy">
+              <img src="${PIC(it.img)}" alt="${tr(U.illusAlt, { t: it.t })}" loading="lazy">
             </div>
           </article>`;
         }).join("")}</div>
@@ -207,10 +211,27 @@
     ${title(H.k, H.h, H.p, "indigo")}
     <div class="mod-grid">${D.modalities.map((m, i) => `
       <a class="mod" href="#/modalities/${m.id}" ${C(MOD[m.id][0])}>
-        <div class="media"><img src="${IMG("m-" + m.id)}" alt="" loading="lazy">${ico(MOD[m.id][1], MOD[m.id][0], true)}</div>
+        <div class="media"><img src="${IMG3D(m.id)}" alt="" loading="lazy">${ico(MOD[m.id][1], MOD[m.id][0], true)}</div>
         <div class="body"><h3>${m.name}</h3><span class="en" lang="${LANG === "en" ? "ar" : "en"}">${altName(m, i)}</span><p>${m.short}</p>${doseBadge(m.dose)}</div>
       </a>`).join("")}
     </div>`;
+  };
+  views.modalities.mount = (on) => {
+    const fig = $("#v3d"); if (!fig) return;
+    let dispose = null;
+    const btn = $("#v3d-btn");
+    btn.addEventListener("click", async () => {
+      if (dispose) { dispose(); dispose = null; fig.classList.remove("live"); btn.innerHTML = `${I("cube")}<span>${U.v3d.open}</span>`; return; }
+      btn.disabled = true; btn.innerHTML = `<span>${U.v3d.loading}</span>`;
+      try {
+        const mod = await import("./viewer3d.js");
+        dispose = mod.mount(fig, fig.dataset.id);
+        fig.classList.add("live");
+        btn.innerHTML = `${I("close")}<span>${U.v3d.close}</span>`;
+      } catch (e) { btn.innerHTML = `<span>${U.v3d.error}</span>`; }
+      btn.disabled = false;
+    });
+    on("dispose", () => dispose && dispose());
   };
   function modalityDetail(id) {
     const i = D.modalities.findIndex(m => m.id === id);
@@ -222,13 +243,17 @@
     const bullets = (arr, bc) => group(arr.map(x => row({ t: x, bullet: bc, top: true })));
     return `
     ${title(`<span lang="${LANG === "en" ? "ar" : "en"}">${altName(m, i)}</span>`, m.name, m.short, c)}
-    ${hero("m-" + m.id, m.name)}
+    <figure class="hero-media v3d" id="v3d" data-id="${m.id}" style="margin:0">
+      <img src="${IMG3D(m.id)}" alt="${tr(U.illusAlt, { t: m.name })}">
+      <figcaption>${U.v3d.cap} · ${m.name}</figcaption>
+      <button class="v3d-btn" type="button" id="v3d-btn">${I("cube")}<span>${U.v3d.open}</span></button>
+    </figure>
     <div class="widgets">
       <div class="widget lvl-${m.dose}"><span class="wl"><i></i>${H.rad}</span><span class="wv">${meter(m.dose)}</span><span style="font-size:12px;color:var(--label-2)">${D.doseLabels[m.dose]}</span></div>
       <div class="widget" ${C(c)}><span class="wl"><i></i>${H.dur}</span><span class="wv">${m.duration}</span></div>
       <div class="widget" ${C(m.dose ? "orange" : "green")}><span class="wl"><i></i>${H.ion}</span><span class="wv">${m.dose ? U.yes : U.no}</span></div>
     </div>
-    <section class="section">${sectionHead(H.how)}<div class="prose-card"><p>${m.how}</p></div></section>
+    <section class="section">${sectionHead(H.how)}<div class="prose-card"><p>${m.how}</p></div>${hero("m-" + m.id, U.v3d.diagram)}</section>
     <section class="section">${sectionHead(H.uses)}${bullets(m.uses, c)}</section>
     <section class="section">${sectionHead(H.prep)}${group(m.prep.map(x => row({ t: x, icon: "check", c: "green", top: true })), true)}</section>
     <section class="section">${sectionHead(H.during)}<div class="prose-card"><p>${m.during}</p></div></section>
@@ -484,7 +509,10 @@
     const view = views[key];
     cleanups.forEach(f => f()); cleanups = [];
     main.innerHTML = `<div class="page">${view ? view(parts[1]) : notFound()}</div>`;
-    const on = (type, fn) => { main.addEventListener(type, fn); cleanups.push(() => main.removeEventListener(type, fn)); };
+    const on = (type, fn) => {
+      if (type === "dispose") { cleanups.push(fn); return; }
+      main.addEventListener(type, fn); cleanups.push(() => main.removeEventListener(type, fn));
+    };
     if (view && view.mount) view.mount(on);
 
     const parent = key === "modalities" && parts[1] ? "modalities" : PARENT[key];

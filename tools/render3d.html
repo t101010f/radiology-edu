@@ -1,0 +1,24 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>render 3d</title>
+<script type="importmap">{ "imports": { "three": "../js/vendor/three.module.min.js" } }</script>
+<style>body{margin:0;background:#222}canvas{display:block}</style></head>
+<body>
+<canvas id="c"></canvas>
+<script type="module">
+  // صفحة توليد الصور: تُفتح من سكربت tools/render3d.py
+  import { buildScene, makeRenderer, MODEL_IDS } from "../js/scenes3d.js";
+  window.MODEL_IDS = MODEL_IDS;
+  window.renderImage = (id, w = 1600, h = 900, q = 0.88) => {
+    const canvas = document.getElementById("c");
+    const r = makeRenderer(canvas, { preserve: true });
+    r.setPixelRatio(1); r.setSize(w, h, false);
+    const { scene, camera } = buildScene(id, r);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+    r.render(scene, camera); r.render(scene, camera);
+    const url = canvas.toDataURL("image/jpeg", q);
+    r.dispose();
+    return url;
+  };
+  window.READY = true;
+</script>
+</body></html>

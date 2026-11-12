@@ -102,6 +102,7 @@ window.I18N = {
       srcS: ["ICRP", "IAEA · حماية المرضى", "WHO", "ACR · RSNA", "ACR", "تصوير الأطفال", "تصوير البالغين", "UNSCEAR"],
       warn: ["تنبيه", "المحتوى للتثقيف فقط ولا يغني عن استشارة الطبيب أو أخصائي الأشعة. الرسوم التوضيحية أصلية ومرسومة خصيصًا للمنصة."]
     },
+    v3d: { cap: "نموذج ثلاثي الأبعاد", open: "عرض ثلاثي الأبعاد", close: "إغلاق", loading: "جارٍ التحميل…", error: "تعذّر التحميل", hint: "اسحب للتدوير، وقرّب بإصبعين", diagram: "مخطط توضيحي لطريقة العمل" },
     nf: { k: "خطأ", h: "الصفحة غير موجودة", p: "الرابط غير صحيح أو أن الصفحة نُقلت.", btn: "العودة للرئيسية" }
   },
 
@@ -206,6 +207,7 @@ window.I18N = {
       srcS: ["ICRP", "IAEA · Radiation protection of patients", "WHO", "ACR · RSNA", "ACR", "Pediatric imaging", "Adult imaging", "UNSCEAR"],
       warn: ["Note", "This content is for education only and does not replace advice from your doctor or radiologist. The illustrations are original and drawn specifically for this platform."]
     },
+    v3d: { cap: "3D model", open: "View in 3D", close: "Close", loading: "Loading…", error: "Could not load", hint: "Drag to rotate, pinch to zoom", diagram: "Diagram of how it works" },
     nf: { k: "Error", h: "Page not found", p: "The link is incorrect or the page has moved.", btn: "Back to Home" }
   }
 };
