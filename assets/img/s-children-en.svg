@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360" role="img" aria-label="Imaging children">
+<defs>
+<radialGradient id="bgg" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="#16303a"/><stop offset="1" stop-color="#0f1c23"/></radialGradient>
+<pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#ffffff" stroke-opacity=".045"/></pattern>
+<linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0b45c" stop-opacity=".75"/><stop offset="1" stop-color="#f0b45c" stop-opacity=".08"/></linearGradient>
+<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="soft"><feGaussianBlur stdDeviation="1.2"/></filter>
+<marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6fc3d9"/></marker>
+</defs>
+<rect width="640" height="360" fill="url(#bgg)"/><rect width="640" height="360" fill="url(#grid)"/>
+<rect x="162" y="94" width="76" height="40" rx="8" fill="#1f323c" stroke="#e3ecef" stroke-width="2"/><path d="M184 134h32l-6 12h-20z" fill="#e3ecef" fill-opacity=".8"/><rect x="196" y="10" width="8" height="84" fill="#8fb3c0"/><path d="M194 146L206 146L234 240L166 240z" fill="url(#beam)"/><rect x="110" y="250" width="200" height="10" rx="3" fill="#e3ecef" fill-opacity=".85"/><g><circle cx="150" cy="234" r="17" fill="#2c4350" stroke="#8fb3c0" stroke-width="1.5"/><rect x="170" y="218" width="100" height="32" rx="16" fill="#2c4350" stroke="#8fb3c0" stroke-width="1.5"/></g><path d="M410 200A60 60 0 0 1 530 200" fill="none" stroke="#8fb3c0" stroke-opacity=".4" stroke-width="14"/><path d="M410 200A60 60 0 0 1 427.6 157.6" fill="none" stroke="#6fcf97" stroke-width="14"/><path d="M470 200L436.1 166.1" stroke="#cfe3ea" stroke-width="3" stroke-linecap="round"/><circle cx="470" cy="200" r="6" fill="#cfe3ea"/><text x="470" y="240" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="17" font-weight="500" fill="#cfe3ea" text-anchor="middle" direction="ltr">Dose adjusted to child size</text><text x="410" y="214" font-family="Menlo, Consolas, monospace" font-size="14" fill="#8fb3c0" text-anchor="middle">low</text><text x="530" y="214" font-family="Menlo, Consolas, monospace" font-size="14" fill="#8fb3c0" text-anchor="middle">high</text>
+</svg>

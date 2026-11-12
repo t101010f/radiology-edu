@@ -2,10 +2,14 @@
 import math, os, sys
 
 OUT = sys.argv[1]
+LANG = sys.argv[2] if len(sys.argv) > 2 else "ar"
+EN = {'أبلغي الفني أولًا': 'Tell the staff first', 'أثر الإشعاع على اللوح': 'Radiation mark', 'أدوات الحماية الشخصية في الأشعة': 'Personal protective equipment in radiology', 'أقل جرعة ممكنة': 'Lowest dose', 'أملاح اليورانيوم': 'Uranium salts', 'أنابيب مضخّمة': 'PM tubes', 'أنبوب الأشعة': 'X-ray tube', 'أنبوب الأشعة يدور': 'Rotating X-ray tube', 'أواخر القرن التاسع عشر': 'Late 19th century', 'أول مقطع للدماغ': 'First brain slice', 'إجراء دقيق': 'Precise procedure', 'إلكترونات': 'Electrons', 'احتمال حمل؟': 'Pregnant?', 'الأرشيف': 'Archive', 'الأشعة السينية': 'X-ray', 'الأشعة العادية': 'X-ray', 'الأشعة المقطعية': 'CT', 'الأوعية الدموية': 'Blood vessels', 'الاستقبال والفحص': 'Reception & screening', 'الجنين': 'Fetus', 'الخاتم يظهر ناصعًا': 'Ring shows bright', 'الرنين': 'MRI', 'الصبغة': 'Contrast', 'الطب': 'Medicine', 'العضو لا شكله فقط': 'not just shape', 'الفيزياء': 'Physics', 'الكاشف': 'Detector', 'الكاشف الرقمي': 'Digital detector', 'الكواشف': 'Detectors', 'المجس': 'Probe', 'المريلة الرصاصية': 'Lead apron', 'المغناطيس الرئيسي': 'Main magnet', 'المنطقة 1': 'Zone 1', 'المنطقة 2': 'Zone 2', 'المنطقة 3': 'Zone 3', 'المنطقة 4': 'Zone 4', 'النظارات الرصاصية': 'Lead glasses', 'الهدف (الأنود)': 'Target (anode)', 'الوعاء يظهر بوضوح في الصورة': 'Vessel shows clearly', 'اليوم العالمي للأشعة': 'Day of Radiology', 'بتوجيه الأشعة': 'guided by imaging', 'بديل بلا إشعاع': 'Radiation-free', 'بقرار الطبيب': 'Doctor decides', 'بلا مريلة أو حاجز أو قياس جرعة': 'No apron, barrier or dosimeter', 'بلّورة وامضة': 'Crystal', 'تأجيل غير العاجل': 'Postpone', 'تصوير وظيفة': 'Shows function,', 'تعديل الإعدادات': 'Adjust dose', 'توهّج الراديوم': 'Radium glow', 'جرعة الجنين ضئيلة': 'Tiny fetal dose', 'جرعة حسب حجم الطفل': 'Dose adjusted to child size', 'حاجز': 'Barrier', 'حاجز رصاصي': 'Lead barrier', 'حركة السرير': 'Table moves', 'حماية الجذع': 'Protects the torso', 'حماية الغدة': 'Protects the thyroid', 'حماية عدسة العين': 'Protects the eye lens', 'خطوط المجال المغناطيسي': 'Magnetic field lines', 'خلف الحاجز': 'Behind barrier', 'سونار أو رنين': 'Ultrasound/MRI', 'شعاع الأشعة السينية': 'X-ray beam', 'شعاعان بطاقتين': 'Two energy beams', 'صورة أوضح بجرعة أقل': 'Clearer image, lower dose', 'صورة الصدر': 'Chest image', 'صورة حية متحركة': 'Live moving image', 'صورة لحظية': 'Real-time image', 'ضاعف المسافة': 'Double distance', 'ضغط لثوانٍ': 'Brief compression', 'طرف القسطرة': 'Catheter tip', 'عامة': 'Public', 'عيادة الطبيب': "Doctor's clinic", 'غرفة الجهاز': 'Scanner room', 'فتحة الجهاز': 'Scanner bore', 'فتحة دخول صغيرة': 'Small entry point', 'فتيل مُسخَّن': 'Heated filament', 'فحص خارج البطن': 'Not abdominal', 'قبل الصبغة': 'Before contrast', 'قريب': 'Close', 'كاشف أشعة جاما': 'Gamma detector', 'لا إشعاع مؤيّن': 'No ionizing radiation', 'لوح الضغط': 'Paddle', 'لوح تصوير مغلّف': 'Wrapped photo plate', 'مادة مشعّة متتبّعة': 'Radioactive tracer', 'مجال مغناطيسي قوي': 'Strong magnetic field', 'محطة القراءة': 'Workstation', 'مقطع عرضي': 'Cross-section', 'مقياس الجرعة': 'Dosimeter', 'مقيّدة': 'Restricted', 'منطقة مشتبهة': 'Suspicious area', 'موجات صوتية وصداها': 'Sound waves and echoes', 'موجّه الأشعة': 'Collimator', 'نوفمبر': 'November', 'واقي الدرقية': 'Thyroid shield', 'يساعد الطبيب ولا يحل محله': 'Assists the radiologist', 'يُرتدى دائمًا': 'Always worn'}
+TITLES_EN = {'m-xray': 'X-ray', 'm-ct': 'CT', 'm-mri': 'MRI', 'm-ultrasound': 'Ultrasound', 'm-mammography': 'Mammography', 'm-fluoroscopy': 'Fluoroscopy', 'm-nuclear': 'Nuclear medicine', 'm-interventional': 'Interventional radiology', 'm-dexa': 'Bone densitometry', 'hero': 'A modern radiology department', 'h-1895-hand': 'Illustration of the first X-ray image', 'h-1896-becquerel': "Becquerel's experiment", 'h-1896-early-lab': 'Early X-ray tube without protection', 'h-1898-curie': 'Discovery of radium', 'h-1901-roentgen': 'The first Nobel Prize in Physics', 'h-1979-nobel': 'Nobel Prize in Medicine for CT', 'h-2003-nobel': 'Nobel Prize in Medicine for MRI', 'h-1913-coolidge': 'The Coolidge tube', 'h-1928-icrp': 'Founding of the ICRP', 'h-1957-gamma': 'The gamma camera', 'h-1958-ultrasound': 'Ultrasound in pregnancy', 'h-1971-ct': 'The first CT scan', 'h-1977-mri': 'The first human MRI', 'h-1993-pacs': 'PACS', 'h-2008-children': 'Doses tailored for children', 'h-2012-idor': 'International Day of Radiology', 'h-today-ai': 'AI in radiology', 's-staff': 'Staff protective equipment', 's-children': 'Imaging children', 's-pregnancy': 'Pregnancy and imaging', 's-mri-zones': 'MRI safety zones', 's-contrast': 'Contrast injection', 's-tds': 'Time, distance and shielding'}
 W, H = 640, 360
 C = dict(bg="#0f1c23", bg2="#16303a", line="#cfe3ea", dim="#8fb3c0", acc="#6fc3d9", amber="#f0b45c",
          green="#6fcf97", red="#f2877f", body="#2c4350", dev="#1f323c", devl="#e3ecef", bone="#e6f1f4")
 FONT = "Tajawal, Tahoma, Arial, sans-serif"
+FONT_EN = "-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
 
 def svg(inner, title):
     return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-label="{title}">
@@ -22,8 +26,13 @@ def svg(inner, title):
 </svg>'''
 
 def T(x, y, s, size=16, color=None, weight=500, anchor="middle"):
-    size = round(size * 1.3)
-    return f'<text x="{x}" y="{y}" font-family="{FONT}" font-size="{size}" font-weight="{weight}" fill="{color or C["line"]}" text-anchor="{anchor}" direction="rtl">{s}</text>'
+    if LANG == "en":
+        if s in EN: s = EN[s]
+        elif any("\u0600" <= ch <= "\u06ff" for ch in s): raise SystemExit("missing EN: " + s)
+        anchor = {"start": "end"}.get(anchor, anchor)
+    s = s.replace("&", "&amp;")
+    size = round(size * (1.12 if LANG == "en" else 1.3))
+    return f'<text x="{x}" y="{y}" font-family="{FONT_EN if LANG == 'en' else FONT}" font-size="{size}" font-weight="{weight}" fill="{color or C["line"]}" text-anchor="{anchor}" direction="{'ltr' if LANG == 'en' else 'rtl'}">{s}</text>'
 
 def M(x, y, s, size=13, color=None, anchor="middle"):
     size = round(size * (1.25 if size < 20 else 1))
@@ -379,6 +388,8 @@ D["s-tds"] = ("الزمن والمسافة والحاجز",
     + T(180, 300, "قريب", 15) + T(330, 300, "ضاعف المسافة", 15) + T(500, 300, "حاجز رصاصي", 15) + T(448, 100, "حاجز", 13, C["dim"]))
 
 for k, (title, inner) in D.items():
-    with open(os.path.join(OUT, k + ".svg"), "w", encoding="utf8") as f:
+    if LANG == "en":
+        title = TITLES_EN[k]
+    with open(os.path.join(OUT, k + ("-en" if LANG == "en" else "") + ".svg"), "w", encoding="utf8") as f:
         f.write(svg(inner, title))
 print(len(D), "illustrations")
